@@ -2,12 +2,30 @@
 import scrapy
 from scrapy.http import Request
 import datetime
+# import sys
+# sys.path.append('.')
+# sys.path.append('..')
 
+class DuplicatesPipeline:
+
+    def __init__(self):
+        self.ids_seen = []
+
+    def process_item(self, item):
+        if item in self.ids_seen:
+            return True
+        else:
+            self.ids_seen.append(item)
+        return False
+
+# Duplicates = DuplicatesPipeline()
 
 class DantriXahoiSpider(scrapy.Spider):
     name = 'dantri'
+    Duplicates = DuplicatesPipeline()
     allowed_domains = ['dantri.com.vn']
-    start_urls = ['https://dantri.com.vn/xa-hoi.htm', \
+    start_urls = ['https://dantri.com.vn/su-kien.htm',\
+                'https://dantri.com.vn/xa-hoi.htm', \
                 'https://dantri.com.vn/the-gioi.htm',\
                 'https://dantri.com.vn/the-thao.htm',\
                 'https://dantri.com.vn/giao-duc-khuyen-hoc.htm',\
@@ -21,7 +39,13 @@ class DantriXahoiSpider(scrapy.Spider):
                 'https://dantri.com.vn/suc-khoe.htm',\
                 'https://dantri.com.vn/suc-manh-so.htm',\
                 'https://dantri.com.vn/o-to-xe-may.htm',\
-                'https://dantri.com.vn/tinh-yeu-gioi-tinh.htm']
+                'https://dantri.com.vn/tinh-yeu-gioi-tinh.htm',\
+                'https://dantri.com.vn/khoa-hoc-cong-nghe.htm',\
+                'https://dantri.com.vn/blog.htm',\
+                'https://dantri.com.vn/ban-doc.htm',\
+                'https://dantri.com.vn/viec-lam.htm',\
+                'https://dantri.com.vn/doi-song.htm',\
+                'https://dantri.com.vn/chuyen-la.htm']
     base_url = 'https://dantri.com.vn' 
 
     def parse(self, response):
@@ -31,7 +55,11 @@ class DantriXahoiSpider(scrapy.Spider):
             url = response.urljoin(url)
             # print(url)
             # print("9"*100)
-            yield scrapy.Request(url=url, callback=self.parse_news)
+            if self.Duplicates.process_item(url):
+                print('Duplicates ......')
+                continue
+            else:
+                yield scrapy.Request(url=url, callback=self.parse_news)
         next_page = response.css(".fon27.mt1.mr2::attr(href)").get()
         # print("hehe"*100)
         # print(next_page)
